@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Wanderer:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Wanderer_jar</output-path>
+    <root id="archive" name="Wanderer.jar">
+      <element id="module-output" name="Wanderer" />
+    </root>
+  </artifact>
+</component>

@@ -14,24 +14,23 @@ import java.util.ArrayList;
 /**
  * Created by Paul on 12/24/2016.
  */
-public class Simple {
-    private final String directory = "e:/GoogleMapImages/";
+public class Wanderer {
+
     //7000 seems max
     //86 with 12G heap
-    static int tilesSqRoot = 86;
+    private static int tilesSqRoot = 30;
+    private static String directory = "e:/GoogleMapImages/";
+    private static GoogleMapGrabber gm = new GoogleMapGrabber();
 
     int tilesToDownLoad = tilesSqRoot * tilesSqRoot;
-    GoogleMapGrabber gm = new GoogleMapGrabber();
+
     ArrayList<Data> datalist = new ArrayList<Data>();
 
-    public Simple() {
-
-
-        System.out.println("creating spiral list");
+    public Wanderer() {
+        long heapMaxSize = Runtime.getRuntime().maxMemory()/1000000;
+        System.out.println("java -Xmx"+heapMaxSize+"m -jar Wanderer.jar "+gm.name+" "+gm.lat+" "+gm.lon+" "+gm.zoom+" "+Wanderer.tilesSqRoot+" "+Wanderer.directory);
         int x = 0, y = 0, dx = 0, dy = -1;
         int t = 0;
-
-
         while (tilesToDownLoad-- > 0) {
             String sat = gm.getSatelliteUrl(x, y);
             String filename = gm.getFileName(x, y);
@@ -52,12 +51,10 @@ public class Simple {
             maxx = Math.max(maxx, d.tileX);
             maxy = Math.max(maxy, d.tileY);
         }
-        System.out.println(minx + "," + miny + "\t" + maxx + "," + maxy);
         int w = maxx - minx;
         int h = maxy - miny;
         w *= GoogleMapGrabber.SIZE;
         h *= GoogleMapGrabber.SIZE;
-        System.out.println("BigPNG=" + w + "," + h + " = " + (w * h * 6l) / (1000000l) + "MB");
         BufferedImage bigPNG = new BufferedImage((int) w, (int) h, BufferedImage.TYPE_INT_RGB);
         Graphics bigPNGGraphics = bigPNG.getGraphics();
 
@@ -69,7 +66,6 @@ public class Simple {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frameO.setBounds(0, 0, screenSize.width, screenSize.height);
         frameO.setVisible(true);
-
 
         JFrame frame = new JFrame("Scale");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,6 +79,7 @@ public class Simple {
         miny = Integer.MAX_VALUE;
         maxx = Integer.MIN_VALUE;
         maxy = Integer.MIN_VALUE;
+
         for (Data d : datalist) {
             minx = Math.min(minx, d.tileX);
             miny = Math.min(miny, d.tileY);
@@ -90,23 +87,18 @@ public class Simple {
             maxy = Math.max(maxy, d.tileY);
             if (!new File(directory + d.filename).exists()) {
                 try {
-                    System.out.println(d.tileX + "," + d.tileY);
                     BufferedImage image = ImageIO.read(new URL(d.sat));
                     BufferedImage image2 = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_RGB);
                     Graphics bg = image2.getGraphics();
                     bg.drawImage(image, 0, 0, null);
                     ImageIO.write(image2, "png", new File(directory + d.filename));
                     bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
-
-
                 } catch (IOException e) {
-                    System.out.println("retrying");
+                    System.err.println("error - retrying!");
                     continue;
                 }
             } else {
                 try {
-
-
                     BufferedImage image2 = ImageIO.read(new File(directory + d.filename));
                     bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
                 } catch (IOException e) {
@@ -114,33 +106,37 @@ public class Simple {
                 }
 
             }
-            imagePane.w = ((maxx - minx)+1) * GoogleMapGrabber.SIZE;
-            imagePane.h = ((maxy - miny)+1) * GoogleMapGrabber.SIZE;
+            imagePane.w = ((maxx - minx) + 1) * GoogleMapGrabber.SIZE;
+            imagePane.h = ((maxy - miny) + 1) * GoogleMapGrabber.SIZE;
 
+            imagePane.x = (bigPNG.getWidth() - imagePane.w) / 2;
+            imagePane.y = (bigPNG.getHeight() - imagePane.h - GoogleMapGrabber.SIZE) / 2;
 
-            imagePane.x =(bigPNG.getWidth()-imagePane.w)/2 ;
-            imagePane.y =(bigPNG.getHeight()-imagePane.h-GoogleMapGrabber.SIZE)/2 ;
+            if ((maxx - minx) % 2 == 1) imagePane.x += GoogleMapGrabber.SIZE / 2;
+            if ((maxy - miny) % 2 == 0) imagePane.y += GoogleMapGrabber.SIZE / 2;
 
-            if ((maxx-minx)%2==1)imagePane.x+=GoogleMapGrabber.SIZE/2;
-            if ((maxy-miny)%2==0)imagePane.y+=GoogleMapGrabber.SIZE/2;
-
-            System.out.println(imagePane.x+","+imagePane.y+":"+imagePane.w+","+imagePane.h);
             imagePane.repaint();
             imagePaneO.repaint();
-
         }
         try {
-            System.out.println("saving");
-            ImageIO.write(bigPNG, "png", new File(directory + gm.name+".png"));
-            System.out.println("saved");
+            ImageIO.write(bigPNG, "png", new File(directory + gm.name + ".png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("done");
+        //System.exit(0);
     }
 
     public static void main(String[] args) {
-        new Simple();
+        if (args.length>0){
+            gm.name=args[0];
+            gm.lat=Double.parseDouble(args[1]);
+            gm.lon=Double.parseDouble(args[2]);
+            gm.zoom=Integer.parseInt(args[3]);
+            tilesSqRoot = Integer.parseInt(args[4]);
+            directory=args[5];
+        }
+        new Wanderer();
     }
 
 
@@ -156,8 +152,8 @@ public class Simple {
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-          //  g.drawImage(bi, 0, 0, getWidth(), getHeight(), this);
-            g.drawImage(bi, 0, 0, getWidth(), getHeight(), x, y, x+w, y+h, this);
+            //  g.drawImage(bi, 0, 0, getWidth(), getHeight(), this);
+            g.drawImage(bi, 0, 0, getWidth(), getHeight(), x, y, x + w, y + h, this);
         }
 
     }
@@ -174,7 +170,7 @@ public class Simple {
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-              g.drawImage(bi, 0, 0, getWidth(), getHeight(), this);
+            g.drawImage(bi, 0, 0, getWidth(), getHeight(), this);
 //            g.drawImage(bi, 0, 0, getWidth(), getHeight(), x, y, w, h, this);
         }
 
