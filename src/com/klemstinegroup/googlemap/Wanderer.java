@@ -16,23 +16,19 @@ import java.util.ArrayList;
  */
 public class Wanderer {
 
-    //7000 seems max
-    //86 with 12G heap
-    private static int tilesSqRoot = 30;
-    private static String directory = "e:/GoogleMapImages/";
     private static GoogleMapGrabber gm = new GoogleMapGrabber();
 
-    int tilesToDownLoad = tilesSqRoot * tilesSqRoot;
+    int tilesToDownLoad = GoogleMapGrabber.tilesSqRoot * GoogleMapGrabber.tilesSqRoot;
 
     ArrayList<Data> datalist = new ArrayList<Data>();
 
     public Wanderer() {
         long heapMaxSize = Runtime.getRuntime().maxMemory()/1000000;
-        System.out.println("java -Xmx"+heapMaxSize+"m -jar Wanderer.jar "+gm.name+" "+gm.lat+" "+gm.lon+" "+gm.zoom+" "+Wanderer.tilesSqRoot+" "+Wanderer.directory);
+        System.out.println("java -Xmx"+heapMaxSize+"m -jar Wanderer.jar "+gm.name+" "+gm.lat+" "+gm.lon+" "+gm.zoom+" "+ GoogleMapGrabber.tilesSqRoot+" "+ GoogleMapGrabber.directory);
         int x = 0, y = 0, dx = 0, dy = -1;
         int t = 0;
         while (tilesToDownLoad-- > 0) {
-            String sat = gm.getSatelliteUrl(x, y);
+            String sat = gm.getRoadMapUrl(x, y);
             String filename = gm.getFileName(x, y);
             datalist.add(new Data(sat, filename, x, y));
             if ((x == y) || ((x < 0) && (x == -y)) || ((x > 0) && (x == 1 - y))) {
@@ -85,13 +81,13 @@ public class Wanderer {
             miny = Math.min(miny, d.tileY);
             maxx = Math.max(maxx, d.tileX);
             maxy = Math.max(maxy, d.tileY);
-            if (!new File(directory + d.filename).exists()) {
+            if (!new File(GoogleMapGrabber.directory + d.filename).exists()) {
                 try {
                     BufferedImage image = ImageIO.read(new URL(d.sat));
                     BufferedImage image2 = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_RGB);
                     Graphics bg = image2.getGraphics();
                     bg.drawImage(image, 0, 0, null);
-                    ImageIO.write(image2, "png", new File(directory + d.filename));
+                    ImageIO.write(image2, "png", new File(GoogleMapGrabber.directory + d.filename));
                     bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
                 } catch (IOException e) {
                     System.err.println("error - retrying!");
@@ -99,7 +95,7 @@ public class Wanderer {
                 }
             } else {
                 try {
-                    BufferedImage image2 = ImageIO.read(new File(directory + d.filename));
+                    BufferedImage image2 = ImageIO.read(new File(GoogleMapGrabber.directory + d.filename));
                     bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -119,7 +115,7 @@ public class Wanderer {
             imagePaneO.repaint();
         }
         try {
-            ImageIO.write(bigPNG, "png", new File(directory + gm.name + ".png"));
+            ImageIO.write(bigPNG, "png", new File(GoogleMapGrabber.directory + gm.name + ".png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -133,8 +129,8 @@ public class Wanderer {
             gm.lat=Double.parseDouble(args[1]);
             gm.lon=Double.parseDouble(args[2]);
             gm.zoom=Integer.parseInt(args[3]);
-            tilesSqRoot = Integer.parseInt(args[4]);
-            directory=args[5];
+            GoogleMapGrabber.tilesSqRoot = Integer.parseInt(args[4]);
+            GoogleMapGrabber.directory=args[5];
         }
         new Wanderer();
     }

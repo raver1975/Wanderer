@@ -3,10 +3,14 @@ package com.klemstinegroup.googlemap;
 public class GoogleMapGrabber {
 
     public static int SIZE = 512;
-    public double lat = 14.0149458;
-    public double lon = -60.9991606;
+    static String directory = "c:/Jerusalem/";
+    //7000 seems max
+    //86 with 12G heap
+    static int tilesSqRoot = 86;
+    public double lat = 31.778 ;
+    public double lon = 35.2354;
     public int zoom = 20;
-    public String name = "Castries";
+    public String name = "JerusalemRd";
 
     static final double GOOGLEOFFSET = 268435456;
     static final double GOOGLEOFFSET_RADIUS = GOOGLEOFFSET / Math.PI;
@@ -46,8 +50,10 @@ public class GoogleMapGrabber {
     }
 
     public String getRoadMapUrl(int x, int y) {
-        double templon = adjustLonByPixels(lon, x, zoom);
-        double templat = adjustLatByPixels(lat, -y, zoom);
+        int x1=x*SIZE;
+        int y1=y*SIZE;
+        double templon = adjustLonByPixels(lon, x1, zoom);
+        double templat = adjustLatByPixels(lat, -y1, zoom);
         return "http://maps.googleapis.com/maps/api/staticmap?" + "center="
                 + templat
                 + ","
