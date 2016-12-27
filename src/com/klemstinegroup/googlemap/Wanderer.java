@@ -79,8 +79,9 @@ public class Wanderer {
         maxy = Integer.MIN_VALUE;
 
         for (Data d : datalist) {
-            boolean flag = false;
+            boolean flag;
             do {
+                flag = false;
                 minx = Math.min(minx, d.tileX);
                 miny = Math.min(miny, d.tileY);
                 maxx = Math.max(maxx, d.tileX);
@@ -137,7 +138,7 @@ public class Wanderer {
 
                 }
 
-                if (roadImage != null&&satImage!=null) {
+                if (roadImage != null && satImage != null) {
                     //combine
                     BufferedImage alphaImage = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_ARGB);
                     int[] alphaPixels = alphaImage.getRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, null, 0, GoogleMapGrabber.SIZE);
