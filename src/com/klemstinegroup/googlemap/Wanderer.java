@@ -2,7 +2,10 @@ package com.klemstinegroup.googlemap;
 
 //import com.klemstinegroup.googlemap.PairLite;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
+
 import javax.imageio.ImageIO;
+import javax.sound.midi.Soundbank;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -24,13 +27,12 @@ public class Wanderer {
 
     public Wanderer() {
         long heapMaxSize = Runtime.getRuntime().maxMemory()/1000000;
-        System.out.println("java -Xmx"+heapMaxSize+"m -jar Wanderer.jar "+gm.name+" "+gm.lat+" "+gm.lon+" "+gm.zoom+" "+ GoogleMapGrabber.tilesSqRoot+" "+ GoogleMapGrabber.directory);
+        System.out.println("java -Xmx"+heapMaxSize+"m -jar Wanderer.jar "+gm.name+" "+gm.lat+" "+gm.lon+" "+gm.zoom+" "+ GoogleMapGrabber.tilesSqRoot+" "+ GoogleMapGrabber.directory+" "+gm.key);
         int x = 0, y = 0, dx = 0, dy = -1;
         int t = 0;
         while (tilesToDownLoad-- > 0) {
-            String sat = gm.getRoadMapUrl(x, y);
-            String filename = gm.getFileName(x, y);
-            datalist.add(new Data(sat, filename, x, y));
+
+            datalist.add(new Data(x, y));
             if ((x == y) || ((x < 0) && (x == -y)) || ((x > 0) && (x == 1 - y))) {
                 t = dx;
                 dx = -dy;
@@ -77,31 +79,59 @@ public class Wanderer {
         maxy = Integer.MIN_VALUE;
 
         for (Data d : datalist) {
-            minx = Math.min(minx, d.tileX);
-            miny = Math.min(miny, d.tileY);
-            maxx = Math.max(maxx, d.tileX);
-            maxy = Math.max(maxy, d.tileY);
-            if (!new File(GoogleMapGrabber.directory + d.filename).exists()) {
-                try {
-                    BufferedImage image = ImageIO.read(new URL(d.sat));
-                    BufferedImage image2 = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_RGB);
-                    Graphics bg = image2.getGraphics();
-                    bg.drawImage(image, 0, 0, null);
-                    ImageIO.write(image2, "png", new File(GoogleMapGrabber.directory + d.filename));
-                    bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
-                } catch (IOException e) {
-                    System.err.println("error - retrying!");
-                    continue;
-                }
-            } else {
-                try {
-                    BufferedImage image2 = ImageIO.read(new File(GoogleMapGrabber.directory + d.filename));
-                    bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            boolean flag=false;
+            do {
+                minx = Math.min(minx, d.tileX);
+                miny = Math.min(miny, d.tileY);
+                maxx = Math.max(maxx, d.tileX);
+                maxy = Math.max(maxy, d.tileY);
+                if (!(new File(GoogleMapGrabber.directory + d.filename).exists())) {
+                    try {
+                        System.out.println("------------------------------------");
+                        System.out.println("(" + d.tileX + "," + d.tileY + ")");
 
+                        System.out.println("loading sat");
+                        BufferedImage satImage = ImageIO.read(new URL(d.sat));
+                        BufferedImage satImageCrop = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_RGB);
+                        Graphics bg = satImageCrop.getGraphics();
+                        bg.drawImage(satImage, 0, 0, null);
+                        ImageIO.write(satImageCrop, "png", new File(GoogleMapGrabber.directory + d.filename));
+
+                        System.out.println("loading road");
+                        BufferedImage roadImage = ImageIO.read(new URL(d.road));
+                        BufferedImage roadImageCrop = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_RGB);
+                        Graphics bg1 = roadImageCrop.getGraphics();
+                        bg1.drawImage(roadImage, 0, 0, null);
+                        ImageIO.write(roadImageCrop, "png", new File(GoogleMapGrabber.directory + d.filenameRd));
+
+                        //combine
+                        BufferedImage alphaImage = new BufferedImage(GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, BufferedImage.TYPE_INT_ARGB);
+                        int[] alphaPixels = alphaImage.getRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, null, 0, GoogleMapGrabber.SIZE);
+                        int[] roadPixels = roadImage.getRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, null, 0, GoogleMapGrabber.SIZE);
+                        int[] satPixels = satImage.getRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, null, 0, GoogleMapGrabber.SIZE);
+                        for (int i = 0; i < satPixels.length; i++) {
+                            int color = satPixels[i] & 0x00ffffff; // Mask preexisting alpha
+                            int alpha = roadPixels[i] << 24; // Shift blue to alpha
+                            alphaPixels[i] = color | alpha;
+                        }
+                        alphaImage.setRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, alphaPixels, 0, GoogleMapGrabber.SIZE);
+                        bigPNGGraphics.drawImage(alphaImage, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
+
+                    } catch (IOException e) {
+                        System.err.println("error - retrying!"+"\t"+e.getMessage());
+                        flag=true;
+                    }
+                } else {
+                    try {
+                        BufferedImage image2 = ImageIO.read(new File(GoogleMapGrabber.directory + d.filename));
+                        bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
             }
+            while(flag);
             imagePane.w = ((maxx - minx) + 1) * GoogleMapGrabber.SIZE;
             imagePane.h = ((maxy - miny) + 1) * GoogleMapGrabber.SIZE;
 
@@ -125,12 +155,13 @@ public class Wanderer {
 
     public static void main(String[] args) {
         if (args.length>0){
-            gm.name=args[0];
-            gm.lat=Double.parseDouble(args[1]);
-            gm.lon=Double.parseDouble(args[2]);
-            gm.zoom=Integer.parseInt(args[3]);
-            GoogleMapGrabber.tilesSqRoot = Integer.parseInt(args[4]);
-            GoogleMapGrabber.directory=args[5];
+            if (args.length>0)gm.name=args[0];
+            if (args.length>1)gm.lat=Double.parseDouble(args[1]);
+            if (args.length>2)gm.lon=Double.parseDouble(args[2]);
+            if (args.length>3)gm.zoom=Integer.parseInt(args[3]);
+            if (args.length>4)GoogleMapGrabber.tilesSqRoot = Integer.parseInt(args[4]);
+            if (args.length>5)GoogleMapGrabber.directory=args[5];
+            if (args.length>6)GoogleMapGrabber.key=args[6];
         }
         new Wanderer();
     }
@@ -175,15 +206,20 @@ public class Wanderer {
 
     class Data {
         String sat;
+        String road;
         String filename;
         int tileX;
         int tileY;
+        public String filenameRd;
 
-        public Data(String sat, String filename, int tileX, int tileY) {
-            this.sat = sat;
-            this.filename = filename;
-            this.tileX = tileX;
-            this.tileY = tileY;
+
+        public Data(int x, int y) {
+            tileX=x;
+            tileY=y;
+            sat = gm.getSatelliteUrl(x, y);
+            road = gm.getRoadMapUrl(x, y);
+            filename = gm.getFileName(x, y);
+            filenameRd = gm.getFileNameRd(x, y);
         }
     }
 }
