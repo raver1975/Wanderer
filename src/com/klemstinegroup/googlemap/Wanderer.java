@@ -106,8 +106,8 @@ public class Wanderer {
                     }
                 } else {
                     try {
-                        BufferedImage image2 = ImageIO.read(new File(GoogleMapGrabber.directory + d.filename));
-                        bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
+                        satImage= ImageIO.read(new File(GoogleMapGrabber.directory + d.filename));
+                        //bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -130,8 +130,8 @@ public class Wanderer {
                     }
                 } else {
                     try {
-                        BufferedImage image2 = ImageIO.read(new File(GoogleMapGrabber.directory + d.filenameRd));
-                        bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
+                        roadImage= ImageIO.read(new File(GoogleMapGrabber.directory + d.filenameRd));
+                        //bigPNGGraphics.drawImage(image2, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
