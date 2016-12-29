@@ -8,6 +8,7 @@ public class GoogleMapGrabber {
     //86 with 12G heap
     static int tilesSqRoot = 86;
     public static String key="AIzaSyAsj-GadPbVpK0-G-HxHxbcPKuSLUme5xE";
+    public static String style="sat";
     public double lat = 44.253653172740925;//31.778 ;
     public double lon = -88.4055233001709;//35.2354;
     public int zoom = 20;
