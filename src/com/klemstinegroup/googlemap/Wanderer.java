@@ -193,6 +193,7 @@ public class Wanderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("done");
 
     }
 
@@ -209,8 +210,6 @@ public class Wanderer {
 
         }
         new Wanderer();
-        new Wanderer();
-        System.out.println("done");
 //        System.exit(0);
     }
 
