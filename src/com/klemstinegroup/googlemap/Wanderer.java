@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -151,7 +152,14 @@ public class Wanderer {
                     for (int i = 0; i < satPixels.length; i++) {
                         int color = satPixels[i] & 0x00ffffff; // Mask preexisting alpha
                         int alpha = roadPixels[i] << 24; // Shift blue to alpha
+                        //only show sat
+                        alpha=0xff000000;
                         alphaPixels[i] = color | alpha;
+                        int data=roadPixels[i]& 0x00ffffff;;
+                        String s=new BigInteger(Integer.toString(data)).toString(16);
+                        if (s.equals("111111")){
+                            alphaPixels[i]=0xffffffff;
+                        }
                     }
                     alphaImage.setRGB(0, 0, GoogleMapGrabber.SIZE, GoogleMapGrabber.SIZE, alphaPixels, 0, GoogleMapGrabber.SIZE);
                     bigPNGGraphics.drawImage(alphaImage, (w / 2 - gm.SIZE / 2) + d.tileX * gm.SIZE, (h / 2 - gm.SIZE / 2) - d.tileY * gm.SIZE, null);
@@ -185,8 +193,7 @@ public class Wanderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("done");
-        //System.exit(0);
+
     }
 
     public static void main(String[] args) {
@@ -202,6 +209,9 @@ public class Wanderer {
 
         }
         new Wanderer();
+        new Wanderer();
+        System.out.println("done");
+//        System.exit(0);
     }
 
 

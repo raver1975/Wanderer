@@ -6,14 +6,14 @@ public class GoogleMapGrabber {
 
     //7000 seems max
     //86 with 12G heap
-    static int tilesSqRoot = 86;
+    static int tilesSqRoot = 20;
     public static String key="AIzaSyAsj-GadPbVpK0-G-HxHxbcPKuSLUme5xE";
-    public static String style="sat";
-    public double lat = 44.253653172740925;//31.778 ;
-    public double lon = -88.4055233001709;//35.2354;
-    public int zoom = 20;
-    public String name = "Appleton";//"Jerusalem";
-    static String directory = "e:/GoogleMapImages/Appleton2";
+    public static String style="hybrid";
+    public double lat = 13.176055;//,-65.0199923;//31.778 ;
+    public double lon =  -59.568534;//35.2354;
+    public int zoom = 16;
+    public String name = "Barbados";//"Jerusalem";
+    static String directory = "c:/temp/barbados";
 
     static{
         if (!directory.endsWith(File.separator))directory+=File.separator;
